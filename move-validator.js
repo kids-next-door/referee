@@ -6,10 +6,6 @@ const { generateID } = require('./utility')
 const equalPoints = (a, b) => a.x === b.x && a.y === b.y
 
 const validateMove = (currentPosition, requestedPosition, path, gridSize) => {
-	if (!requestedPosition || !gridSize) {
-		return false
-	}
-
 	if (requestedPosition.x < 0
 		|| requestedPosition.y < 0
 		|| requestedPosition.x >= gridSize.width
@@ -54,6 +50,7 @@ const acceptMoveRequests = () =>
 
 				let newState =
 					Object.keys(game.player_state)
+						.filter(playerID => game.player_state[playerID].requested_position)
 						.filter(playerID => {
 							const state = game.player_state[playerID]
 							return validateMove(state.current_position, state.requested_position, game.paths[playerID], game.grid_size)
@@ -98,10 +95,34 @@ const gameCompleted = () =>
 																		return finished ? count + 1 : count
 																	}, 0)
 
+
+
 						if (winnersCount === playerCount) {
+							let finishTimes = Object.keys(game.player_state)
+																		.map(playerID => {
+																			const { finished } = game.player_state[playerID]
+																			return { playerID, finished }
+																		})
+
+							finishTimes.sort((a, b) => (a.finished < b.finished) ? -1 : 1)
+
+							let { scores } = game
+
+							const rewards = [100, 80, 50]
+							rewards.forEach((reward, rank) => {
+								const player = finishTimes[rank]
+								if (!player) {
+									return
+								}
+								scores[player.playerID] += reward
+							})
+							
 							firebase.database()
-								.ref(`games/${snapshot.key}/status`)
-								.set('over')
+											.ref(`games/${snapshot.key}`)
+											.update({
+												scores,
+												status: 'over',
+											})
 						}
 	    })
 
