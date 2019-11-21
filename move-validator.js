@@ -19,10 +19,19 @@ const validateMove = (currentPosition, requestedPosition, path, gridSize) => {
 	}
 
 	// TODO: Reset to start of path
-	for (const tileLocation of path) {
-		if (equalPoints(requestedPosition, tileLocation)) {
-			// point is on path
-			return true
+	// for (const tileLocation of path) {
+	// 	if (equalPoints(requestedPosition, tileLocation)) {
+	// 		// point is on path
+	// 		return true
+	// 	}
+	// }
+
+	for (const step of path.keys()) {
+		const tileLocation = path[step]
+
+		if (equalPoints(currentPosition, tileLocation)) {
+			const nextStep = path[step + 1]
+			return equalPoints(requestedPosition, nextStep)
 		}
 	}
 	return false
