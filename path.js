@@ -105,15 +105,15 @@ const printPath = (path, gridSize) => {
   }
 }
 
-const gridSize = { width: 4, height: 4 }
+// const gridSize = { width: 4, height: 4 }
 
-const simplePath = createSimplePath({ x: 3, y: 0}, { x: 0, y: 3 })
+// const simplePath = createSimplePath({ x: 3, y: 0}, { x: 0, y: 3 })
 
 // printPath(simplePath, gridSize)
 
-const path = pathRandomizer(simplePath, simplePath.length + 3, gridSize)
+// const path = pathRandomizer(simplePath, simplePath.length + 3, gridSize)
 
-printPath(path, gridSize)
+// printPath(path, gridSize)
 
 const rotatePoint = (point, gridSize) => ({ x: point.y, y: gridSize.width - point.x - 1 })
 const mirrorXPoint = (point, gridSize) => ({ x: gridSize.width - point.x - 1, y: point.y })
@@ -124,3 +124,35 @@ const applyTransform = transform => (path, gridSize) => path.map(point => transf
 const rotatePath = applyTransform(rotatePoint)
 const mirrorXPath = applyTransform(mirrorXPoint)
 const mirrorYPath = applyTransform(mirrorYPoint)
+
+module.exports = {
+  generatePath: (desiredLength, gridSize) => {
+    const start = {
+      x: random(0, gridSize.width - 1),
+      y: 0,
+    }
+
+    const end = {
+      x: random(0, gridSize.width - 1),
+      y: gridSize.height - 1,
+    }
+
+    const simplePath = createSimplePath(start, end)
+
+    let path = pathRandomizer(simplePath, desiredLength, gridSize)
+
+    if (random(0, 1)) {
+      path = mirrorXPath(path, gridSize)
+    }
+
+    if (random(0, 1)) {
+      path = mirrorYPath(path, gridSize)
+    }
+
+    for (const _ of range(0, 3)) {
+      path = rotatePath(path, gridSize)
+    }
+
+    return path
+  },
+}

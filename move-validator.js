@@ -11,21 +11,20 @@ const validateMove = (currentPosition, requestedPosition, path, gridSize) => {
 		|| requestedPosition.x >= gridSize.width
 		|| requestedPosition.y >= gridSize.height) {
 		// off edge of grid
-		return false
+		return null
 	}
 
 	if (!currentPosition) {
-		return true
+		return null
 	}
 
 	// TODO: Reset to start of path
-	// for (const tileLocation of path) {
-	// 	if (equalPoints(requestedPosition, tileLocation)) {
-	// 		// point is on path
-	// 		return true
-	// 	}
-	// }
-	return true
+	for (const tileLocation of path) {
+		if (equalPoints(requestedPosition, tileLocation)) {
+			// point is on path
+			return true
+		}
+	}
 	return false
 }
 
@@ -34,6 +33,15 @@ const acceptMove = game => (updatedState, playerID) => ({
 	[playerID]: {
 		...game.player_state[playerID],
 		current_position: game.player_state[playerID].requested_position,
+		requested_position: null,
+	},
+})
+
+const rejectMove = game => (updatedState, playerID) => ({
+	...updatedState,
+	[playerID]: {
+		...game.player_state[playerID],
+		current_position: game.paths[playerID][0],
 		requested_position: null,
 	},
 })
@@ -48,14 +56,41 @@ const acceptMoveRequests = () =>
 					return
 				}
 
-				let newState =
+				const decisions =
 					Object.keys(game.player_state)
 						.filter(playerID => game.player_state[playerID].requested_position)
-						.filter(playerID => {
+						.map(playerID => {
 							const state = game.player_state[playerID]
-							return validateMove(state.current_position, state.requested_position, game.paths[playerID], game.grid_size)
+							const decision = validateMove(state.current_position, state.requested_position, game.paths[playerID], game.grid_size)
+							
+							let code
+							switch (decision) {
+								case true:
+									code = 'accept'
+									break
+								case false:
+									code = 'reset'
+									break
+								default:
+									code = 'ignore'
+									break
+							}
+							return { playerID, decision: code }
 						})
+
+				
+
+				let newState =
+					decisions
+						.filter(d => d.decision === 'accept')
+						.map(d => d.playerID)
 						.reduce(acceptMove(game), {})
+
+				newState =
+					decisions
+						.filter(d => d.decision === 'reset')
+						.map(d => d.playerID)
+						.reduce(rejectMove(game), newState)
 
 				const winners = Object.keys(newState)
 															.reduce((winners, playerID) => {
@@ -116,7 +151,7 @@ const gameCompleted = () =>
 								}
 								scores[player.playerID] += reward
 							})
-							
+
 							firebase.database()
 											.ref(`games/${snapshot.key}`)
 											.update({

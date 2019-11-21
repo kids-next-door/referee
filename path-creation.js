@@ -1,14 +1,6 @@
 const firebase = require('./config-firebase')
 
-const generatePath = gridSize => {
-	return [...Array(gridSize.height).keys()].map(i => ({ x: 0, y: i }))
-}
-
-// module.exports = generatePath
-
-const needsPaths = gameID => {
-
-}
+const { generatePath } = require('./path')
 
 const autoAssignPaths = () =>
 	firebase.database()
@@ -23,7 +15,7 @@ const autoAssignPaths = () =>
 			const paths = Object.keys(game.connected_players)
 													.reduce((paths, playerID) => ({
 														...paths,
-														[playerID]: generatePath(game.grid_size),
+														[playerID]: generatePath(9, game.grid_size),
 													}), {})
 
 			const state = Object.keys(paths)
