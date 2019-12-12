@@ -18,14 +18,6 @@ const validateMove = (currentPosition, requestedPosition, path, gridSize) => {
 		return null
 	}
 
-	// TODO: Reset to start of path
-	// for (const tileLocation of path) {
-	// 	if (equalPoints(requestedPosition, tileLocation)) {
-	// 		// point is on path
-	// 		return true
-	// 	}
-	// }
-
 	for (const step of path.keys()) {
 		const tileLocation = path[step]
 
@@ -171,5 +163,8 @@ const gameCompleted = () =>
 	    })
 
 module.exports = {
-	listeners: [acceptMoveRequests, gameCompleted]
+	listeners: [acceptMoveRequests, gameCompleted],
+	functions: {
+		validateMove,
+	}
 }
